@@ -1,0 +1,54 @@
+<template>
+    <div class="wrap">
+        <!-- srcdoc部分不兼容，iframe直接渲染，代码块置于iframe中 -->
+        <div class="iframe" v-html="html" v-if="isIframe"></div>
+        <iframe class="iframe" frameborder="0" :srcdoc="html" ref="iframe" v-else @load="setIframeDocStyle"></iframe>
+    </div>
+</template>
+
+<script>
+import { mapState } from 'vuex';
+export default {
+    name: 'IframeView',
+    data() {
+        return {
+            html: '',
+            isIframe: true
+        };
+    },
+    computed: {
+        ...mapState({
+            userMenu: state => state.user.permission
+        })
+    },
+    mounted() {
+        console.log(this.userMenu);
+        const item = this.userMenu.find(item => item.id == this.$route.params.id);
+        this.isIframe = /^<iframe>/.test(item.url);
+        this.html = item ? item.url : '';
+    },
+    methods: {
+        setIframeDocStyle() {
+            const doc = this.$refs.iframe.contentWindow.document;
+            const style = 'html,body{margin: 0;padding: 0;width: 100%; height: 100%}';
+            const styleElement = document.createElement('style');
+            styleElement.type = 'text/css';
+            styleElement.id = 'styles_js';
+            doc.getElementsByTagName('head')[0].appendChild(styleElement);
+            doc.querySelector('#styles_js').appendChild(document.createTextNode(style));
+        }
+    }
+};
+</script>
+
+<style lang="less" scoped>
+.wrap{
+    width: 100%;
+    height: calc(100% - 6px);
+    background-color: #fff;
+}
+.iframe{
+    width: 100%;
+    height: 100%;
+}
+</style>
